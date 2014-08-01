@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="R. Cameron Craddock, PhD" />
+  <meta name="author" content="Research Scientist VI, Nathan S. Kline Institute for Psychiatric Research, New York, NY" />
+  <meta name="author" content="Director of Imaging, Child Mind Institute, New York, NY" />
+  <meta name="date" content="2014-07-31" />
+  <title>Lecture #4: Comparing connectomes - graph theory, statistical learning, classifiers, and correcting for multiple comparisons</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Lecture #4: Comparing connectomes - graph theory, statistical learning, classifiers, and correcting for multiple comparisons</h1>
+  <p class="author">
+R. Cameron Craddock, PhD<br/>Research Scientist VI, Nathan S. Kline Institute for Psychiatric Research, New York, NY<br/>Director of Imaging, Child Mind Institute, New York, NY
+  </p>
+  <p class="date">July 31, 2014</p>
+</div>
+<div id="comparing-connectomes" class="slide section level1">
+<h1>Comparing connectomes</h1>
+<ul>
+<li>Once we have a connectome graphs for a set of individuals, the next challenge is comparing them
+<ul>
+<li>Indentify connections withen the graph, or subgraphs, that vary with disease state or other phenotype</li>
+</ul></li>
+</ul>
+<center>
+<img src="imgs/cc400_graph.png" width=600>
+</center>
+
+</div>
+<div id="what-is-a-graph" class="slide section level1">
+<h1>What is a graph?</h1>
+<ul>
+<li>Mathmatical description of the relationship between ``things''</li>
+<li>Consists of nodes and edges</li>
+<li>Nodes correspond to brain areas</li>
+<li>Edges correspond to connections between brain areas
+<ul>
+<li>structural connections from dMRI</li>
+<li>functional interactions from fMRI</li>
+</ul></li>
+<li>Graphs derived from fMRI and dMRI data can be treated similarly, except for a few exceptions</li>
+</ul>
+</div>
+<div id="weighted-and-binarized" class="slide section level1">
+<h1>Weighted and binarized</h1>
+<ul>
+<li>Edges in a weighted graph are annotated with a weight that corresponds to the edge strength</li>
+<li>No such weighting is used with binarized graphs</li>
+</ul>
+<center><figure>
+<img src="imgs/rubinovandsporns.png">
+<figcaption>
+<small>Rubinov and Sporns, <em>NeuroImage</em>, 2010.</small>
+</figcaption></figure></center>
+
+
+</div>
+<div id="a-note-about-thresholding" class="slide section level1">
+<h1>A note about Thresholding</h1>
+<ul>
+<li>Although, every node <em>could</em> be connected to every other node, this is not likely the case</li>
+<li>Use thresholding to remove unlikely connections due to poor strength or likelihood of error</li>
+<li>Thresholding is also necessary for binarizing connections</li>
+<li><strong>Sparsity threshold</strong>: keep only a fraction of the strongest connections</li>
+<li><strong>Significance threshold</strong>: remove edges that may have arisen by chance</li>
+<li>Although negative correlations can and do arise in functional connectivity, they are hard to interpret in a graph sense and are often removed</li>
+</ul>
+</div>
+<div id="bag-of-edges" class="slide section level1">
+<h1>Bag of edges</h1>
+<ul>
+<li>The most obvious is to perform a <em>univariate</em> test on each connectome of the graph
+<ul>
+<li>Allows commonly employed statistical tests such as t-tests and general linear models to be employed</li>
+</ul></li>
+<li>The result is a very large number of connections <span class="math">\(\frac{N_{vox}*(N_{vox}-1)}{2}\)</span>
+<ul>
+<li>19 900 connections when <span class="math">\(N_{vox}=200\)</span></li>
+</ul></li>
+<li>As a consequence, their will be a large number of <em>false positives</em> unless a control for multiple comparisons in employed
+<ul>
+<li>Bonferroni Correction, False Discovery Rate (FDR), Groupwise FDR, Network Based Statistic</li>
+</ul></li>
+</ul>
+</div>
+<div id="prediction-modeling" class="slide section level1">
+<h1>Prediction Modeling</h1>
+<ul>
+<li>Another option for <em>bag of edges</em> style analyses take into account interactions between features</li>
+<li>Also, estimate the significance of an identified pattern differences based on <span class="math">\(p(\text{disease state}|\text{pattern})\)</span> rather than <span class="math">\(p(\text{pattern}|\text{NULL})\)</span></li>
+</ul>
+</div>
+<div id="classification" class="slide section level1">
+<h1>Classification</h1>
+<center>
+<img src="imgs/classifier.png">
+</center>
+
+<ul>
+<li>Given a training set of observations and corresponding (categorical) labels, the objective is to find a linear hyperplane that is capable of seperating observations from different categories</li>
+<li>For linearly seperable data there are an infinite number of hyperplanes that meet this requirement</li>
+<li><strong>Support Vector Classification</strong> finds the unique hyperplance that maximizes the perpendicular distance from the hyperplace to the nearest observations of a class (<strong>margin</strong>)</li>
+</ul>
+</div>
+<div id="train-vs.-test" class="slide section level1">
+<h1>Train vs. Test</h1>
+<ul>
+<li>Training is the process of solving a mathmatical algorithm to learn a classifier
+<ul>
+<li>Requires: Data + Labels</li>
+<li>Results: Model</li>
+</ul></li>
+<li>Testing involves applying the classifier to a never-before-seen dataset to estimate <em>prediction accuracy</em> (or <em>generalization error</em>)</li>
+<li>Test and training datasets should be independent to avoid biased estimates of prediction accuracy</li>
+</ul>
+</div>
+<div id="bag-of-edges-predictive-modeling" class="slide section level1">
+<h1>Bag of Edges Predictive Modeling</h1>
+<center><figure>
+<img src="imgs/boe_classifier.png" width=500>
+<figcaption>
+Craddock et al. <em>Magnetic Resonance in Medicine</em> 2009.
+</figcaption></figure></center>
+
+</div>
+<div id="feature-selection" class="slide section level1">
+<h1>Feature Selection</h1>
+<ul>
+<li>Filter methods: Perform a univariate test at each edge and only include those that pass a liberal threshold (univariate criterion that is not sensitive to multivariate relationships)</li>
+<li>Reliability Filter: Estimate bootstrap confidence intervals and exclude features whose 95% CI include zero</li>
+</ul>
+<center><figure>
+<img src="imgs/realibility_FS.png">
+<figcaption>
+Craddock et al. <em>Magnetic Resonance in Medicine</em> 2009.
+</figcaption></figure></center>
+
+</div>
+<div id="connectome-wide-association-studies" class="slide section level1">
+<h1>Connectome Wide Association Studies</h1>
+<center><figure>
+<img src="imgs/cwas_shehzad_schematic.png">
+<figcaption>
+<small>Shehzad et al. <em>NeuroImage</em>, 2014.</small>
+</figcaption></figure></center>
+
+</div>
+<div id="graph-invariants" class="slide section level1">
+<h1>Graph Invariants</h1>
+<ul>
+<li>As an alternative, we can reduce the number of tests to one per node or one per graph using <strong>graph invariants</strong> (complex network measures)</li>
+<li>Graph invariants: a property of a graph that does not depend on the graphs represtation or orientation</li>
+<li>The same graph can be represented in many different ways</li>
+</ul>
+<center><figure>
+<img src="imgs/gephi_layout1.png"><img src="imgs/gephi_layout2.png">
+<figcaption>
+<small>The same graph arranged in two different ways. Created with Gephi.</small>
+</figcaption></figure></center>
+
+</div>
+<div id="node-centrality-hubbiness" class="slide section level1">
+<h1>Node Centrality (Hubbiness)</h1>
+<ul>
+<li>The relative importance of a node in a network, determined by its connections</li>
+<li><strong>Degree</strong>: Number of links connected to a node</li>
+<li><strong>Closeness Centrality</strong>: the average of the inverse distance from the node to all other nodes</li>
+<li><strong>Betweenness Centralty</strong>: the average length of all shortest paths that pass through a node</li>
+<li><strong>Eignevector</strong>: average of the centrality measures for the nodes that a target node is connected to</li>
+<li><strong>Pagerank Centrality</strong>: derives a score based on the number and centrality of the nodes a target node is connected to (Google's algorithm)</li>
+</ul>
+</div>
+<div id="efficiency" class="slide section level1">
+<h1>Efficiency</h1>
+<ul>
+<li>Efficiency is a measure of how quickly information can travel between any two nodes in a network</li>
+<li><strong>Global efficiency</strong>: The average inverse shortest distance between every two points in a network</li>
+<li><strong>Local efficiency</strong>: the inverse of the average shortest path connecting all neighbors of a vertex.</li>
+</ul>
+</div>
+<div id="small-worldness" class="slide section level1">
+<h1>Small Worldness</h1>
+<ul>
+<li>Small world graphs, are graphs in which nodes can be quickly reached from every other node by a small number of hops, although the number of edges between nodes is minimized</li>
+<li><strong>Clustering Coefficient (C)</strong>: the number links that exist between a node and its neighbors, divided by all possible links to neighboring nodes</li>
+<li><strong>Characteristic Path Length (L)</strong>: The average of all shortest paths in the network</li>
+<li><strong>Small worldness</strong> of a network is $S=, where <span class="math">\(C_{rand}\)</span> and <span class="math">\(L_{rand}\)</span> are the clustering coefficient and characteristic path lengths that would have been obtained from randomly generated graphs with the same number of nodes and edges.</li>
+<li>if <em>S&gt;1.0</em> the graph is said to be ``small world'' which means that
+<ul>
+<li>its clustering coefficient is higher then expected from a random graph (resilient to point attacks)</li>
+<li>its average path length is shorter than expected from a random graph (efficient)</li>
+</ul></li>
+</ul>
+</div>
+<div id="functional-vs.-structural" class="slide section level1">
+<h1>Functional vs. Structural</h1>
+<ul>
+<li>Since functional interactions do not imply a route or wire between connected regions, path measures don't make since for these graphs
+<ul>
+<li>i.e. the fact that A is connected to B and B is connected to C does not imply that information can travel from A to C, if A and C were where functionally connected, their activity would be correlated</li>
+</ul></li>
+<li>This is not the case for structural graphs</li>
+</ul>
+</div>
+<div id="example-small-worldness-in-schizophrenia" class="slide section level1">
+<h1>Example: Small Worldness in Schizophrenia</h1>
+<center><figure>
+<img vspace=30 src="imgs/stats_schiz1.png" width=300><img hspace=30 src="imgs/stats_schiz2.png" width=200>
+<figcaption>
+<small>Small world properties of funcitonal connectivity networks differ between healthy controls and schizophrenics. He et al. <em>PLoS One</em> 2012. </small>
+</figcaption></figure></center>
+
+
+
+</div>
+</body>
+</html>
